@@ -14,6 +14,16 @@ class BooksApp extends React.Component {
     })
   }
 
+  updateShelf(book, event) {
+    let newShelf = event.target.value
+    BooksAPI.update(book, newShelf).then(() => {
+      let bookIndex = this.state.books.indexOf(book)
+      let updatedBooks = this.state.books
+      updatedBooks[bookIndex].shelf = newShelf
+      this.setState({ books: updatedBooks })
+    })
+  }
+
   render() {
     return (
       <div className="app">
@@ -34,7 +44,7 @@ class BooksApp extends React.Component {
                               <div className="book-top">
                               <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: `url(${book.imageLinks.thumbnail})` }}></div>
                               <div className="book-shelf-changer">
-                                  <select>
+                                  <select value="currentlyReading" onChange={(event) => this.updateShelf(book, event)}>
                                   <option value="none" disabled>Move to...</option>
                                   <option value="currentlyReading">Currently Reading</option>
                                   <option value="wantToRead">Want to Read</option>
@@ -61,7 +71,7 @@ class BooksApp extends React.Component {
                             <div className="book-top">
                             <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: `url(${book.imageLinks.thumbnail})` }}></div>
                             <div className="book-shelf-changer">
-                                <select>
+                                <select value="wantToRead" onChange={(event) => this.updateShelf(book, event)}>
                                 <option value="none" disabled>Move to...</option>
                                 <option value="currentlyReading">Currently Reading</option>
                                 <option value="wantToRead">Want to Read</option>
@@ -88,7 +98,7 @@ class BooksApp extends React.Component {
                             <div className="book-top">
                             <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: `url(${book.imageLinks.thumbnail})` }}></div>
                             <div className="book-shelf-changer">
-                                <select>
+                                <select value="read" onChange={(event) => this.updateShelf(book, event)}>
                                 <option value="none" disabled>Move to...</option>
                                 <option value="currentlyReading">Currently Reading</option>
                                 <option value="wantToRead">Want to Read</option>
