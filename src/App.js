@@ -5,7 +5,9 @@ import './App.css'
 
 class BooksApp extends React.Component {
   state = {
-    books: []
+    books: [],
+    query: '',
+    searchResults: []
   }
 
   componentDidMount() {
@@ -14,13 +16,30 @@ class BooksApp extends React.Component {
     })
   }
 
+  updateQuery = (query) => {
+    this.setState({ query: query.trim() })
+    BooksAPI.search(query, 20).then((searchResults) =>{
+      if (searchResults) {
+        this.setState({ searchResults })
+      }
+    })
+  }
+
+  findShelf(bookFromResults) {
+    for (let book of this.state.books) {
+      if (bookFromResults.id === book.id) {
+        return book.shelf;
+      }
+    }
+    return 'none';
+  }
+
   updateShelf(book, event) {
     let newShelf = event.target.value
     BooksAPI.update(book, newShelf).then(() => {
-      let bookIndex = this.state.books.indexOf(book)
-      let updatedBooks = this.state.books
-      updatedBooks[bookIndex].shelf = newShelf
-      this.setState({ books: updatedBooks })
+      BooksAPI.getAll().then((books) => {
+        this.setState({ books })
+      })
     })
   }
 
@@ -44,7 +63,7 @@ class BooksApp extends React.Component {
                               <div className="book-top">
                               <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: `url(${book.imageLinks.thumbnail})` }}></div>
                               <div className="book-shelf-changer">
-                                  <select value="currentlyReading" onChange={(event) => this.updateShelf(book, event)}>
+                                  <select value={book.shelf} onChange={(event) => this.updateShelf(book, event)}>
                                     <option value="none" disabled>Move to...</option>
                                     <option value="currentlyReading">Currently Reading</option>
                                     <option value="wantToRead">Want to Read</option>
@@ -54,7 +73,7 @@ class BooksApp extends React.Component {
                               </div>
                               </div>
                               <div className="book-title">{book.title}</div>
-                              <div className="book-authors">{book.authors[0]}</div>
+                              <div className="book-authors">{book.authors ? book.authors[0] : ''}</div>
                           </div>
                           </li>
                       ))}
@@ -71,7 +90,7 @@ class BooksApp extends React.Component {
                             <div className="book-top">
                             <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: `url(${book.imageLinks.thumbnail})` }}></div>
                             <div className="book-shelf-changer">
-                                <select value="wantToRead" onChange={(event) => this.updateShelf(book, event)}>
+                                <select value={book.shelf} onChange={(event) => this.updateShelf(book, event)}>
                                   <option value="none" disabled>Move to...</option>
                                   <option value="currentlyReading">Currently Reading</option>
                                   <option value="wantToRead">Want to Read</option>
@@ -81,7 +100,7 @@ class BooksApp extends React.Component {
                             </div>
                             </div>
                             <div className="book-title">{book.title}</div>
-                            <div className="book-authors">{book.authors[0]}</div>
+                            <div className="book-authors">{book.authors ? book.authors[0] : ''}</div>
                         </div>
                         </li>
                     ))}
@@ -98,7 +117,7 @@ class BooksApp extends React.Component {
                             <div className="book-top">
                             <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: `url(${book.imageLinks.thumbnail})` }}></div>
                             <div className="book-shelf-changer">
-                                <select value="read" onChange={(event) => this.updateShelf(book, event)}>
+                                <select value={book.shelf} onChange={(event) => this.updateShelf(book, event)}>
                                   <option value="none" disabled>Move to...</option>
                                   <option value="currentlyReading">Currently Reading</option>
                                   <option value="wantToRead">Want to Read</option>
@@ -108,7 +127,7 @@ class BooksApp extends React.Component {
                             </div>
                             </div>
                             <div className="book-title">{book.title}</div>
-                            <div className="book-authors">{book.authors[0]}</div>
+                            <div className="book-authors">{book.authors ? book.authors[0] : ''}</div>
                         </div>
                         </li>
                     ))}
@@ -127,20 +146,37 @@ class BooksApp extends React.Component {
             <div className="search-books-bar">
               <Link to="/" className="close-search">Close</Link>
               <div className="search-books-input-wrapper">
-                {/*
-                  NOTES: The search from BooksAPI is limited to a particular set of search terms.
-                  You can find these search terms here:
-                  https://github.com/udacity/reactnd-project-myreads-starter/blob/master/SEARCH_TERMS.md
-
-                  However, remember that the BooksAPI.search method DOES search by title or author. So, don't worry if
-                  you don't find a specific author or title. Every search is limited by search terms.
-                */}
-                <input type="text" placeholder="Search by title or author"/>
-
+                <input
+                  type="text"
+                  placeholder="Search by title or author"
+                  value={this.state.query}
+                  onChange={(event) => this.updateQuery(event.target.value)}
+                />
               </div>
             </div>
             <div className="search-books-results">
-              <ol className="books-grid"></ol>
+              <ol className="books-grid">
+                {this.state.searchResults.map((book) => (
+                  <li key={book.id}>
+                    <div className="book">
+                        <div className="book-top">
+                        <div className="book-cover" style={{ width: 128, height: 193, backgroundImage: `url(${book.imageLinks.thumbnail})` }}></div>
+                        <div className="book-shelf-changer">
+                            <select value={this.findShelf(book)} onChange={(event) => this.updateShelf(book, event)}>
+                              <option value="" disabled>Move to...</option>
+                              <option value="currentlyReading">Currently Reading</option>
+                              <option value="wantToRead">Want to Read</option>
+                              <option value="read">Read</option>
+                              <option value="none">None</option>
+                            </select>
+                        </div>
+                        </div>
+                        <div className="book-title">{book.title}</div>
+                        <div className="book-authors">{book.authors ? book.authors[0] : ''}</div>
+                    </div>
+                    </li>
+                ))}
+              </ol>
             </div>
           </div>
         )}/>
